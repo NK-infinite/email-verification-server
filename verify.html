@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Verification</title>
+</head>
+<body>
+<h2>Email Verification</h2>
+<div id="message"></div>
+
+<script>
+    async function verifyEmail() {
+        // Get token from URL
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        const messageDiv = document.getElementById('message');
+
+        // Check if token is missing
+        if (!token) {
+            messageDiv.textContent = "Invalid token!";
+            messageDiv.style.color = "red";
+            return;
+        }
+
+        try {
+            // Fetch response from backend API for token verification
+            const response = await fetch(`http://192.168.1.9:3000/verify-email?token=${token}`);
+
+            // Check if the response is okay
+            if (response.ok) {
+                const text = await response.json();
+
+                // Show a success popup and display success message
+                alert(text); // Popup
+                messageDiv.textContent = text;
+                messageDiv.style.color = "green";
+            } else {
+                // Handle error if verification failed
+                messageDiv.textContent = "Verification failed!";
+                messageDiv.style.color = "red";
+            }
+        } catch (err) {
+            console.error(err);
+            messageDiv.textContent = "Failed to connect to the server!";
+            messageDiv.style.color = "red";
+        }
+    }
+
+    // Call verifyEmail function when page loads
+    verifyEmail();
+</script>
+</body>
+</html>

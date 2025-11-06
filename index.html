@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            width: 350px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Email Verification</h2>
+        
+        <div id="emailSection">
+            <input type="email" id="email" placeholder="Enter your email" required>
+            <button onclick="sendVerification()" id="sendBtn">Send Verification</button>
+        </div>
+        
+        <div id="verificationSection" style="display: none;">
+            <div class="message info" id="infoMessage">
+                Verification email sent! Check your inbox.
+            </div>
+            <button onclick="checkVerification()" id="checkBtn">Check Verification Status</button>
+            <button onclick="resetForm()" style="background-color: #6c757d;">Use Different Email</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        let currentToken = null;
+
+        function showMessage(text, type = 'info') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+        }
+
+        function resetForm() {
+            currentToken = null;
+            document.getElementById('email').value = '';
+            document.getElementById('emailSection').style.display = 'block';
+            document.getElementById('verificationSection').style.display = 'none';
+            showMessage('', '');
+        }
+
+        async function sendVerification() {
+            const email = document.getElementById("email").value;
+            const sendBtn = document.getElementById("sendBtn");
+
+            if (!email) {
+                showMessage("Please enter a valid email!", 'error');
+                return;
+            }
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            try {
+                const response = await fetch("http://192.168.1.9:3000/send-verification", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.token;
+                    document.getElementById('emailSection').style.display = 'none';
+                    document.getElementById('verificationSection').style.display = 'block';
+                    showMessage(`Verification email sent to ${email}`, 'success');
+                } else {
+                    showMessage(data.error || "Error sending email", 'error');
+                }
+            } catch (err) {
+                showMessage("Failed to connect to server", 'error');
+                console.error(err);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Verification';
+            }
+        }
+        
+        async function checkVerification() {
+            if (!currentToken) {
+                showMessage("No verification in progress", 'error');
+                return;
+            }
+
+            const checkBtn = document.getElementById("checkBtn");
+            checkBtn.disabled = true;
+            checkBtn.textContent = 'Checking...';
+
+            try {
+                const response = await fetch(`http://192.168.1.9:3000/check-verification?token=${currentToken}`);
+                const data = await response.json();
+                
+                if (data.verified) {
+                    showMessage(`✅ Email verified successfully! (${data.email})`, 'success');
+                    checkBtn.style.display = 'none';
+                } else {
+                    showMessage("Not verified yet. Please check your email and click the verification link.", 'info');
+                }
+            } catch (err) {
+                showMessage("Failed to check verification status", 'error');
+                console.error(err);
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.textContent = 'Check Verification Status';
+            }
+        }
+
+        // Auto-check verification every 5 seconds when verification is in progress
+        setInterval(() => {
+            if (currentToken && document.getElementById('verificationSection').style.display !== 'none') {
+                checkVerification();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
