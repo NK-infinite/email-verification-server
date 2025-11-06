@@ -15,8 +15,9 @@ const TOKEN_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 hours
 // Nodemailer transporter (Gmail SMTP)
 const transporter = nodemailer.createTransport({
     service: "gmail",
-    secure: true,
-    port: 465,
+    host: "smtp.gmail.com",
+    secure: false,
+    port: 587,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -125,7 +126,6 @@ setInterval(() => {
     console.log("Cleaned up expired tokens");
 }, 60 * 60 * 1000);
 
-const PORT = 3000;
-const HOST = "0.0.0.0";
 
-app.listen(PORT, HOST, () => console.log(`Server running at http://${HOST}:${PORT}`));
+const PORT = process.env.PORT || 3000; // Cloud providers auto-set PORT
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); // No HOST parameter
