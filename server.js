@@ -36,7 +36,8 @@ app.post("/send-verification", async (req, res) => {
         verified: false
     };
     
-    const verificationLink = `http://192.168.1.9:3000/verify-email?token=${token}`;
+ // Send verification email route mein
+const verificationLink = `https://email-verification-server-ii8x.onrender.com/verify-email?token=${token}`;
 
     try {
         await transporter.sendMail({
