@@ -24,7 +24,7 @@
 
         try {
             // Fetch response from backend API for token verification
-            const response = await fetch(`https://email-verification-server-ii8x.onrender.com/verify-email?token=${token}`);
+            const response = await fetch(`http://192.168.1.9:3000/verify-email?token=${token}`);
 
             // Check if the response is okay
             if (response.ok) {
